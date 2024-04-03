@@ -1,24 +1,34 @@
 const userModel = require("../models/userModel");
 
 class UserController {
-  getAllUsers() {
-    return userModel.listUser();
+  getAllUsers(req, res) {
+    const listUsers = userModel.listUser();
+    return listUsers.then((users) => res.status(200).json(users)).catch((err) => res.status(400).json(err.message));
   }
 
-  getUsersById(id) {
-    return userModel.getByIdUser(id);
+  getUsersById(req, res) {
+    const { id } = req.params;
+    const users = userModel.getByIdUser(id);
+    return users.then((user) => res.status(200).json(user)).catch((err) => res.status(400).json(err.message));
   }
 
-  create(newUser) {
-    return userModel.createUser(newUser);
+  create(req, res) {
+    const newUser = req.body;
+    const users = userModel.createUser(newUser);
+    return users.then((user) => res.status(201).json(user)).catch((err) => res.status(400).json(err.message));
   }
 
-  update(newUser, id) {
-    return userModel.updateUser(newUser, id);
+  update(req, res) {
+    const { id } = req.params;
+    const newUser = req.body;
+    const users = userModel.updateUser(newUser, id);
+    users.then((user) => res.status(200).json(user)).catch((err) => res.status(400).json(err.message));
   }
 
-  delete(id) {
-    return userModel.deleteUser(id);
+  delete(req, res) {
+    const { id } = req.params;
+    const users = userModel.deleteUser(id);
+    return users.then((user) => res.status(200).json(user)).catch((err) => res.status(400).json(err.message));
   }
 
 }
