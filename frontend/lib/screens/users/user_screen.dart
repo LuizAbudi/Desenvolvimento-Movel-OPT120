@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 
-class UserTable extends StatelessWidget {
+class UserTable extends StatefulWidget {
   final List<Map<String, dynamic>> users;
 
   UserTable({required this.users});
 
+  @override
+  _UserTableState createState() => _UserTableState();
+}
+
+class _UserTableState extends State<UserTable> {
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.all(10),
       shrinkWrap: true,
       children: [
+        ElevatedButton(
+          onPressed: () {
+            _criarUsuario();
+          },
+          child: Text('Criar Usuário'),
+        ),
+        SizedBox(height: 10), // Espaçamento entre o botão e a tabela
         SizedBox(
           width: double.infinity,
           child: DataTable(
@@ -48,27 +60,48 @@ class UserTable extends StatelessWidget {
                 ),
               ),
             ],
-            rows: users.map((user) {
+            rows: widget.users.asMap().entries.map((entry) {
+              int index = entry.key;
+              Map<String, dynamic> user = entry.value;
               return DataRow(
                 cells: <DataCell>[
-                  DataCell(Text(user['name'])),
-                  DataCell(Text(user['email'])),
                   DataCell(
-                    Row(
+                    Center(
+                        child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () {
-                            print('Editar');
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            print('Deletar');
-                          },
-                        ),
+                        Text(user['name'], textAlign: TextAlign.center),
                       ],
+                    )),
+                  ),
+                  DataCell(
+                    Center(
+                        child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(user['email'], textAlign: TextAlign.center),
+                      ],
+                    )),
+                  ),
+                  DataCell(
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              _editarUsuario(index, user);
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              _deletarUsuario(index);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -78,5 +111,134 @@ class UserTable extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _criarUsuario() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String nome = '';
+        String email = '';
+        return AlertDialog(
+          title: Text('Criar Usuário'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  nome = value;
+                },
+                decoration: InputDecoration(labelText: 'Nome'),
+              ),
+              TextField(
+                onChanged: (value) {
+                  email = value;
+                },
+                decoration: InputDecoration(labelText: 'E-mail'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                criarUsuario(nome, email);
+                Navigator.of(context).pop();
+              },
+              child: Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editarUsuario(int index, Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String nome = user['name'];
+        String email = user['email'];
+        return AlertDialog(
+          title: Text('Editar Usuário'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  nome = value;
+                },
+                decoration:
+                    InputDecoration(labelText: 'Nome', hintText: user['name']),
+              ),
+              TextField(
+                onChanged: (value) {
+                  email = value;
+                },
+                decoration: InputDecoration(
+                    labelText: 'E-mail', hintText: user['email']),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                editarUsuario(index, nome, email);
+                Navigator.of(context).pop();
+              },
+              child: Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deletarUsuario(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Deletar Usuário'),
+          content: Text('Deseja realmente deletar este usuário?'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                deletarUsuario(index);
+                Navigator.of(context).pop();
+              },
+              child: Text('Sim'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void criarUsuario(String nome, String email) {
+    setState(() {
+      widget.users.add({
+        'name': nome,
+        'email': email,
+      });
+    });
+  }
+
+  void editarUsuario(int index, String nome, String email) {
+    setState(() {
+      widget.users[index]['name'] = nome;
+      widget.users[index]['email'] = email;
+    });
+  }
+
+  void deletarUsuario(int index) {
+    setState(() {
+      widget.users.removeAt(index);
+    });
   }
 }
