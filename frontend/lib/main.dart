@@ -59,7 +59,9 @@ class _HomePageState extends State<HomePage>
             activities: [],
           ),
           UserActivitiesTable(
+            users: [],
             userActivities: [],
+            activities: [],
           ),
         ],
       ),
