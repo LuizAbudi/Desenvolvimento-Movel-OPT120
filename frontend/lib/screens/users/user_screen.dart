@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opt120/screens/users/user_http_requests.dart';
 
 class UserTable extends StatefulWidget {
   final List<Map<String, dynamic>> users;
@@ -119,6 +120,7 @@ class _UserTableState extends State<UserTable> {
       builder: (BuildContext context) {
         String nome = '';
         String email = '';
+        String senha = '';
         return AlertDialog(
           title: Text('Criar Usuário'),
           content: Column(
@@ -136,12 +138,18 @@ class _UserTableState extends State<UserTable> {
                 },
                 decoration: InputDecoration(labelText: 'E-mail'),
               ),
+              TextField(
+                onChanged: (value) {
+                  senha = value;
+                },
+                decoration: InputDecoration(labelText: 'Senha'),
+              ),
             ],
           ),
           actions: [
             ElevatedButton(
               onPressed: () {
-                criarUsuario(nome, email);
+                criarUsuario(nome, email, senha);
                 Navigator.of(context).pop();
               },
               child: Text('Salvar'),
@@ -220,13 +228,15 @@ class _UserTableState extends State<UserTable> {
     );
   }
 
-  void criarUsuario(String nome, String email) {
+  void criarUsuario(String nome, String email, String senha) {
     setState(() {
       widget.users.add({
         'name': nome,
         'email': email,
+        'password': senha,
       });
     });
+    ApiService.createUser(nome, email, senha);
   }
 
   void editarUsuario(int index, String nome, String email) {

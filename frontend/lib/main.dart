@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:opt120/screens/activity/activity_screen.dart';
 import 'package:opt120/screens/user_activity/user_activity_screen.dart';
+import 'package:opt120/screens/users/user_http_requests.dart';
 import 'package:opt120/screens/users/user_screen.dart';
 
 void main() {
@@ -27,11 +28,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<Map<String, dynamic>> _users = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _getUsers();
+  }
+
+  void _getUsers() async {
+    List<Map<String, dynamic>> users = await ApiService.getUsers();
+    setState(() {
+      _users = users;
+    });
+    print(users);
   }
 
   @override
@@ -53,7 +64,7 @@ class _HomePageState extends State<HomePage>
         controller: _tabController,
         children: [
           UserTable(
-            users: [],
+            users: _users,
           ),
           ActivitiesTable(
             activities: [],
