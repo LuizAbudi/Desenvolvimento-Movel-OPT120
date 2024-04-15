@@ -48,7 +48,7 @@ class UserService {
   }
 
   static Future<void> updateUser(
-      String id, String name, String email, String password) async {
+      int id, String name, String email, String password) async {
     final response = await http.put(
       Uri.parse('http://localhost:3000/users/$id'),
       headers: <String, String>{

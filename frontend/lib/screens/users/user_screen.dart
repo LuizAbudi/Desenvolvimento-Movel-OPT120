@@ -143,6 +143,9 @@ class _UserTableState extends State<UserTable> {
                   senha = value;
                 },
                 decoration: InputDecoration(labelText: 'Senha'),
+                obscureText: true,
+                enableSuggestions: false,
+                autocorrect: false,
               ),
             ],
           ),
@@ -166,6 +169,7 @@ class _UserTableState extends State<UserTable> {
       builder: (BuildContext context) {
         String nome = user['name'];
         String email = user['email'];
+        String senha = user['password'];
         return AlertDialog(
           title: Text('Editar Usuário'),
           content: Column(
@@ -185,12 +189,22 @@ class _UserTableState extends State<UserTable> {
                 decoration: InputDecoration(
                     labelText: 'E-mail', hintText: user['email']),
               ),
+              TextField(
+                onChanged: (value) {
+                  senha = value;
+                },
+                decoration: InputDecoration(
+                    labelText: 'Senha', hintText: user['password']),
+                obscureText: true,
+                enableSuggestions: false,
+                autocorrect: false,
+              ),
             ],
           ),
           actions: [
             ElevatedButton(
               onPressed: () {
-                editarUsuario(index, nome, email);
+                editarUsuario(index, nome, email, senha);
                 Navigator.of(context).pop();
               },
               child: Text('Salvar'),
@@ -239,11 +253,13 @@ class _UserTableState extends State<UserTable> {
     UserService.createUser(nome, email, senha);
   }
 
-  void editarUsuario(int index, String nome, String email) {
+  void editarUsuario(int index, String nome, String email, String senha) {
     setState(() {
       widget.users[index]['name'] = nome;
       widget.users[index]['email'] = email;
+      widget.users[index]['password'] = senha;
     });
+    UserService.updateUser(widget.users[index]['id'], nome, email, senha);
   }
 
   void deletarUsuario(int index) {
