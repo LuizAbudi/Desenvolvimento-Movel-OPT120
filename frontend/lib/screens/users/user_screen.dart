@@ -236,7 +236,7 @@ class _UserTableState extends State<UserTable> {
         'password': senha,
       });
     });
-    ApiService.createUser(nome, email, senha);
+    UserService.createUser(nome, email, senha);
   }
 
   void editarUsuario(int index, String nome, String email) {

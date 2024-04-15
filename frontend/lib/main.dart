@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opt120/screens/activity/activity_http_requests.dart';
 import 'package:opt120/screens/activity/activity_screen.dart';
 import 'package:opt120/screens/user_activity/user_activity_screen.dart';
 import 'package:opt120/screens/users/user_http_requests.dart';
@@ -29,20 +30,29 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> _users = [];
+  List<Map<String, dynamic>> _activities = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _getUsers();
+    _getActivities();
   }
 
   void _getUsers() async {
-    List<Map<String, dynamic>> users = await ApiService.getUsers();
+    List<Map<String, dynamic>> users = await UserService.getUsers();
     setState(() {
       _users = users;
     });
-    print(users);
+  }
+
+  void _getActivities() async {
+    List<Map<String, dynamic>> activities =
+        await ActivityService.getActivities();
+    setState(() {
+      _activities = activities;
+    });
   }
 
   @override
@@ -67,11 +77,11 @@ class _HomePageState extends State<HomePage>
             users: _users,
           ),
           ActivitiesTable(
-            activities: [],
+            activities: _activities,
           ),
           UserActivitiesTable(
-            users: [],
-            userActivities: [],
+            users: _users,
+            userActivities: _activities,
             activities: [],
           ),
         ],

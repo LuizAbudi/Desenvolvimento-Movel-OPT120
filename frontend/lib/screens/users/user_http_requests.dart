@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class ApiService {
+class UserService {
   static Future<List<Map<String, dynamic>>> getUsers() async {
     final response = await http.get(Uri.parse(
       'http://localhost:3000/users',

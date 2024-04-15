@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:opt120/screens/activity/activity_http_requests.dart';
 
 class ActivitiesTable extends StatefulWidget {
   final List<Map<String, dynamic>> activities;
@@ -18,9 +19,7 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
       shrinkWrap: true,
       children: [
         ElevatedButton(
-          onPressed: () {
-            _criarAtividade();
-          },
+          onPressed: _criarAtividade,
           child: Text('Criar Atividade'),
         ),
         SizedBox(height: 10), // Espaçamento entre o botão e a tabela
@@ -100,8 +99,9 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            DateFormat('dd/MM/yyyy')
-                                .format(activity['due_date']),
+                            DateFormat('dd/MM/yyyy').format(
+                              DateTime.parse(activity['due_date']),
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -179,8 +179,9 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
                 readOnly: true,
                 decoration: InputDecoration(
                   labelText: 'Data',
+                  // ignore: unnecessary_null_comparison
                   hintText: dueDate != null
-                      ? DateFormat('dd/MM/yyyy').format(dueDate!)
+                      ? DateFormat('dd/MM/yyyy').format(dueDate)
                       : DateFormat('dd/MM/yyyy').format(DateTime.now()),
                 ),
               ),
@@ -201,12 +202,18 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
   }
 
   void _editarAtividade(int index, Map<String, dynamic> activity) {
+    String titulo = activity['title'];
+    String descricao = activity['description'];
+    DateTime? data;
+
+    if (activity['due_date'] != null &&
+        RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(activity['due_date'])) {
+      data = DateTime.parse(activity['due_date']);
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String titulo = activity['title'];
-        String descricao = activity['description'];
-        DateTime? data = activity['due_date'];
         return AlertDialog(
           title: Text('Editar Atividade'),
           content: Column(
@@ -248,7 +255,7 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
                 decoration: InputDecoration(
                   labelText: 'Data',
                   hintText: data != null
-                      ? DateFormat('dd/MM/yyyy').format(data)
+                      ? DateFormat('dd/MM/yyyy').format(data!)
                       : 'Selecione uma data',
                 ),
               ),
@@ -296,27 +303,35 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
   }
 
   void criarAtividade(String titulo, String descricao, DateTime? data) {
+    String dataString = DateFormat('yyyy-MM-dd').format(data ?? DateTime.now());
     setState(() {
       widget.activities.add({
         'title': titulo,
         'description': descricao,
-        'due_date': data ?? DateTime.now(),
+        'due_date': dataString,
       });
     });
+    ActivityService.createActivity(titulo, descricao, dataString);
   }
 
   void editarAtividade(
       int index, String titulo, String descricao, DateTime? data) {
+    String dataString =
+        data != null ? DateFormat('yyyy-MM-dd').format(data) : '';
     setState(() {
       widget.activities[index]['title'] = titulo;
       widget.activities[index]['description'] = descricao;
-      widget.activities[index]['due_date'] = data ?? DateTime.now();
+      widget.activities[index]['due_date'] = dataString;
     });
+
+    int activityId = widget.activities[index]['id'];
+    ActivityService.updateActivity(activityId, titulo, descricao, dataString);
   }
 
   void deletarAtividade(int index) {
     setState(() {
       widget.activities.removeAt(index);
     });
+    ActivityService.deleteActivity(widget.activities[index]['id']);
   }
 }
