@@ -67,7 +67,7 @@ class UserService {
     }
   }
 
-  static Future<void> deleteUser(String id) async {
+  static Future<void> deleteUser(int id) async {
     final response = await http.delete(
       Uri.parse('http://localhost:3000/users/$id'),
     );

@@ -98,7 +98,7 @@ class _UserTableState extends State<UserTable> {
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              _deletarUsuario(index);
+                              _deletarUsuario(index, user);
                             },
                           ),
                         ],
@@ -215,7 +215,7 @@ class _UserTableState extends State<UserTable> {
     );
   }
 
-  void _deletarUsuario(int index) {
+  void _deletarUsuario(int index, Map<String, dynamic> user) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -225,7 +225,10 @@ class _UserTableState extends State<UserTable> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                deletarUsuario(index);
+                UserService.deleteUser(user['id']);
+                setState(() {
+                  widget.users.removeAt(index);
+                });
                 Navigator.of(context).pop();
               },
               child: Text('Sim'),
@@ -260,11 +263,5 @@ class _UserTableState extends State<UserTable> {
       widget.users[index]['password'] = senha;
     });
     UserService.updateUser(widget.users[index]['id'], nome, email, senha);
-  }
-
-  void deletarUsuario(int index) {
-    setState(() {
-      widget.users.removeAt(index);
-    });
   }
 }
