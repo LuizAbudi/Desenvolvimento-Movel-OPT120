@@ -16,7 +16,7 @@ class ActivityService {
     }
   }
 
-  static Future<void> getActivityById(String id) async {
+  static Future<void> getActivityById(int id) async {
     final response = await http.get(Uri.parse(
       'http://localhost:3000/activity/$id',
     ));

@@ -139,6 +139,18 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
   }
 
   void _criarAtividade() {
+    TextEditingController datePickerController = TextEditingController();
+    onTapFunction({required BuildContext context}) async {
+      DateTime? pickedDate = await showDatePicker(
+        context: context,
+        lastDate: DateTime(2101),
+        firstDate: DateTime(2024),
+        initialDate: DateTime.now(),
+      );
+      if (pickedDate == null) return;
+      datePickerController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -163,26 +175,14 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
                 decoration: InputDecoration(labelText: 'Descrição'),
               ),
               TextField(
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      dueDate = picked;
-                    });
-                  }
-                },
+                onTap: () => onTapFunction(context: context),
                 readOnly: true,
+                controller: datePickerController,
                 decoration: InputDecoration(
                   labelText: 'Data',
-                  // ignore: unnecessary_null_comparison
-                  hintText: dueDate != null
-                      ? DateFormat('dd/MM/yyyy').format(dueDate)
-                      : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                  hintText: datePickerController.text.isEmpty
+                      ? 'Selecione uma data'
+                      : datePickerController.text,
                 ),
               ),
             ],
@@ -285,8 +285,11 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                deletarAtividade(index);
+                ActivityService.deleteActivity(widget.activities[index]['id']);
                 Navigator.of(context).pop();
+                setState(() {
+                  widget.activities.removeAt(index);
+                });
               },
               child: Text('Sim'),
             ),
@@ -326,12 +329,5 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
 
     int activityId = widget.activities[index]['id'];
     ActivityService.updateActivity(activityId, titulo, descricao, dataString);
-  }
-
-  void deletarAtividade(int index) {
-    setState(() {
-      widget.activities.removeAt(index);
-    });
-    ActivityService.deleteActivity(widget.activities[index]['id']);
   }
 }
