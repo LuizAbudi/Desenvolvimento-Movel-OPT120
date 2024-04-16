@@ -10,8 +10,8 @@ router.post('/user_activity', (req, res) => {
   user_activityController.create(req, res);
 });
 
-router.put('/user_activity/:id', (req, res) => {
-  user_activityController.updade(req, res);
+router.put('/user_activity/:userId/:activityId', (req, res) => {
+  user_activityController.update(req, res);
 });
 
 router.delete('/user_activity/', (req, res) => {
