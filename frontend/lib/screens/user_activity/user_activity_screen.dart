@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:opt120/screens/user_activity/user_activity_http_requests.dart';
 
 class UserActivitiesTable extends StatefulWidget {
   final List<Map<String, dynamic>> userActivities;
-  final List<Map<String, dynamic>> users; // Lista de usuários
-  final List<Map<String, dynamic>> activities; // Lista de atividades
+  final List<Map<String, dynamic>> users;
+  final List<Map<String, dynamic>> activities;
 
   UserActivitiesTable({
     required this.userActivities,
@@ -17,6 +18,11 @@ class UserActivitiesTable extends StatefulWidget {
 }
 
 class _UserActivitiesTableState extends State<UserActivitiesTable> {
+  late int _userId;
+  late int _activityId;
+  late DateTime? _deliveryDate;
+  late int _score;
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -111,10 +117,11 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                         child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(userActivity['due_date'] != null
-                            ? DateFormat('dd/MM/yyyy')
-                                .format(userActivity['due_date'])
-                            : ''),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(
+                            DateTime.parse(userActivity['delivery_date']),
+                          ),
+                        ),
                       ],
                     )),
                   ),
@@ -134,13 +141,13 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                           IconButton(
                             icon: Icon(Icons.edit),
                             onPressed: () {
-                              _editarUsuarioAtividade(userActivity);
+                              // _editarUsuarioAtividade(userActivity);
                             },
                           ),
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              _deletarUsuarioAtividade(userActivity);
+                              // _deletarUsuarioAtividade(userActivity);
                             },
                           ),
                         ],
@@ -157,73 +164,99 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
   }
 
   void _criarUsuarioAtividade() {
+    TextEditingController datePickerController = TextEditingController();
+    onTapFunction({required BuildContext context}) async {
+      DateTime? pickedDate = await showDatePicker(
+        context: context,
+        lastDate: DateTime(2101),
+        firstDate: DateTime(2024),
+        initialDate: DateTime.now(),
+      );
+      setState(() {
+        _deliveryDate = pickedDate;
+      });
+      if (pickedDate == null) return;
+      datePickerController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String userId = '';
-        String activityId = '';
-        DateTime? dueDate;
-
         return AlertDialog(
           title: Text('Criar Associação Usuário-Atividade'),
           content: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String>(
-                value: userId,
-                items: widget.users.map((user) {
-                  return DropdownMenuItem<String>(
-                    value: user['id'].toString(),
-                    child: Text(user['name'].toString()),
-                  );
-                }).toList(),
+              DropdownButtonFormField(
+                decoration: InputDecoration(labelText: 'Usuário'),
+                items: widget.users
+                    .map((user) => DropdownMenuItem(
+                          value: user['id'],
+                          child: Text(user['name']),
+                        ))
+                    .toList(),
                 onChanged: (value) {
-                  userId = value!;
+                  setState(() {
+                    _userId = value as int;
+                  });
                 },
-                decoration: InputDecoration(labelText: 'Selecione o usuário'),
               ),
-              DropdownButtonFormField<String>(
-                value: activityId,
-                items: widget.activities.map((activity) {
-                  return DropdownMenuItem<String>(
-                    value: activity['id'].toString(),
-                    child: Text(activity['title'].toString()),
-                  );
-                }).toList(),
+              DropdownButtonFormField(
+                decoration: InputDecoration(labelText: 'Atividade'),
+                items: widget.activities
+                    .map((activity) => DropdownMenuItem(
+                          value: activity['id'],
+                          child: Text(activity['title']),
+                        ))
+                    .toList(),
                 onChanged: (value) {
-                  activityId = value!;
+                  setState(() {
+                    _activityId = value as int;
+                  });
                 },
-                decoration: InputDecoration(labelText: 'Selecione a atividade'),
               ),
               TextField(
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      dueDate = picked;
-                    });
-                  }
-                },
+                onTap: () => onTapFunction(context: context),
                 readOnly: true,
+                controller: datePickerController,
                 decoration: InputDecoration(
-                  labelText: 'Data de entrega',
-                  hintText: dueDate != null
-                      ? DateFormat('dd/MM/yyyy').format(dueDate!)
-                      : 'Selecione uma data',
+                  labelText: 'Data',
+                  hintText: datePickerController.text.isEmpty
+                      ? 'Selecione uma data'
+                      : datePickerController.text,
                 ),
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Nota'),
+                onChanged: (value) {
+                  setState(() {
+                    _score = int.parse(value);
+                  });
+                },
               ),
             ],
           ),
           actions: [
-            ElevatedButton(
+            TextButton(
               onPressed: () {
-                criarUsuarioAtividade(userId, activityId, dueDate);
                 Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                String dataString = DateFormat('yyyy-MM-dd')
+                    .format(_deliveryDate ?? DateTime.now());
+                UserActivitiesService.createUserActivity(
+                    _userId, _activityId, dataString, _score);
+                Navigator.of(context).pop();
+                setState(() {
+                  widget.userActivities.add({
+                    'user_id': _userId,
+                    'activity_id': _activityId,
+                    'delivery_date': dataString,
+                    'score': _score,
+                  });
+                });
               },
               child: Text('Salvar'),
             ),
@@ -231,160 +264,5 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
         );
       },
     );
-  }
-
-  void _editarUsuarioAtividade(Map<String, dynamic> userActivity) {
-    String userId = userActivity['user_id'].toString();
-    String activityId = userActivity['activity_id'].toString();
-    String? selectedUserId = userId;
-    String? selectedActivityId = activityId;
-    DateTime? dueDate = userActivity['due_date'];
-    int score = userActivity['score'] ?? 0;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Editar Associação Usuário-Atividade'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedUserId,
-                    items: widget.users.map((user) {
-                      return DropdownMenuItem<String>(
-                        value: user['id'].toString(),
-                        child: Text(user['name'].toString()),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedUserId = value!;
-                      });
-                    },
-                    decoration:
-                        InputDecoration(labelText: 'Selecione o usuário'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedActivityId,
-                    items: widget.activities.map((activity) {
-                      return DropdownMenuItem<String>(
-                        value: activity['id'].toString(),
-                        child: Text(activity['title'].toString()),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedActivityId = value!;
-                      });
-                    },
-                    decoration:
-                        InputDecoration(labelText: 'Selecione a atividade'),
-                  ),
-                  TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        score = int.tryParse(value) ?? 0;
-                      });
-                    },
-                    decoration: InputDecoration(
-                        labelText: 'Nota', hintText: 'Score atual: $score'),
-                  ),
-                  TextField(
-                    onTap: () async {
-                      final DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: dueDate ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          dueDate = picked;
-                        });
-                      }
-                    },
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: 'Data de entrega',
-                      hintText: dueDate != null
-                          ? DateFormat('dd/MM/yyyy').format(dueDate!)
-                          : 'Selecione uma data',
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    editarUsuarioAtividade(userActivity, selectedUserId!,
-                        selectedActivityId!, score, dueDate);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Salvar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _deletarUsuarioAtividade(Map<String, dynamic> userActivity) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Deletar Associação Usuário-Atividade'),
-          content: Text('Deseja realmente deletar esta associação?'),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                deletarUsuarioAtividade(userActivity);
-                Navigator.of(context).pop();
-              },
-              child: Text('Sim'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void criarUsuarioAtividade(
-      String userId, String activityId, DateTime? dueDate) {
-    setState(() {
-      widget.userActivities.add({
-        'user_id': userId,
-        'activity_id': activityId,
-        'due_date': dueDate,
-        'score': 0,
-      });
-    });
-  }
-
-  void editarUsuarioAtividade(Map<String, dynamic> userActivity, String userId,
-      String activityId, int score, DateTime? dueDate) {
-    setState(() {
-      userActivity['user_id'] = userId;
-      userActivity['activity_id'] = activityId;
-      userActivity['score'] = score;
-      userActivity['due_date'] = dueDate;
-    });
-  }
-
-  void deletarUsuarioAtividade(Map<String, dynamic> userActivity) {
-    setState(() {
-      widget.userActivities.remove(userActivity);
-    });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:opt120/screens/activity/activity_http_requests.dart';
 import 'package:opt120/screens/activity/activity_screen.dart';
+import 'package:opt120/screens/user_activity/user_activity_http_requests.dart';
 import 'package:opt120/screens/user_activity/user_activity_screen.dart';
 import 'package:opt120/screens/users/user_http_requests.dart';
 import 'package:opt120/screens/users/user_screen.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage>
   late TabController _tabController;
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _activities = [];
+  List<Map<String, dynamic>> _userActivities = [];
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _HomePageState extends State<HomePage>
     _tabController = TabController(length: 3, vsync: this);
     _getUsers();
     _getActivities();
+    _getUserActivities();
   }
 
   void _getUsers() async {
@@ -52,6 +55,14 @@ class _HomePageState extends State<HomePage>
         await ActivityService.getActivities();
     setState(() {
       _activities = activities;
+    });
+  }
+
+  void _getUserActivities() async {
+    List<Map<String, dynamic>> userActivities =
+        await UserActivitiesService.getUserActivities();
+    setState(() {
+      _userActivities = userActivities;
     });
   }
 
@@ -81,8 +92,8 @@ class _HomePageState extends State<HomePage>
           ),
           UserActivitiesTable(
             users: _users,
-            userActivities: _activities,
-            activities: [],
+            activities: _activities,
+            userActivities: _userActivities,
           ),
         ],
       ),
