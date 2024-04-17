@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:opt120/screens/user_activity/user_activity_http_requests.dart';
 
@@ -21,7 +22,7 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
   late int _userId = 0;
   late int _activityId = 0;
   late DateTime? _deliveryDate;
-  late int _score = 0;
+  late double _score = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +149,8 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                           IconButton(
                             icon: Icon(Icons.edit),
                             onPressed: () {
-                              // _editarUsuarioAtividade(userActivity);
+                              _editarUsuarioAtividade(userActivity['user_id'],
+                                  userActivity['activity_id'], userActivity);
                             },
                           ),
                           IconButton(
@@ -236,9 +238,14 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                 TextField(
                   onChanged: (value) {
                     setState(() {
-                      _score = int.parse(value);
+                      _score = double.parse(value);
                     });
                   },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}')),
+                  ],
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Nota',
                     hintText: 'Digite a nota',
@@ -280,5 +287,90 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
             ],
           );
         });
+  }
+
+  void _editarUsuarioAtividade(
+      int userId, int activityId, Map<String, dynamic> userActivity) {
+    TextEditingController datePickerController = TextEditingController();
+
+    onTapFunction({required BuildContext context}) async {
+      DateTime? pickedDate = await showDatePicker(
+        context: context,
+        lastDate: DateTime(2101),
+        firstDate: DateTime(2024),
+        initialDate: DateTime.now(),
+      );
+      setState(() {
+        _deliveryDate = pickedDate;
+      });
+      if (pickedDate == null) return;
+      datePickerController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Editar Usuário - Atividade'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onTap: () => onTapFunction(context: context),
+                readOnly: true,
+                controller: datePickerController,
+                decoration: InputDecoration(
+                  labelText: 'Data',
+                  hintText: datePickerController.text.isEmpty
+                      ? 'Selecione uma data'
+                      : datePickerController.text,
+                ),
+              ),
+              TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _score = double.parse(value);
+                  });
+                },
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                ],
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Nota',
+                  hintText: 'Digite a nota',
+                ),
+              )
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                UserActivitiesService.updateUserActivity(
+                  userId,
+                  activityId,
+                  DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                  _score.toInt(),
+                );
+                Navigator.of(context).pop();
+                setState(() {
+                  widget.userActivities.removeWhere((element) =>
+                      element['user_id'] == userId &&
+                      element['activity_id'] == activityId);
+                  widget.userActivities.add({
+                    'user_id': userId,
+                    'activity_id': activityId,
+                    'delivery_date':
+                        DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                    'score': _score,
+                  });
+                });
+              },
+              child: Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

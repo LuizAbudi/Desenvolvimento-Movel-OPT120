@@ -18,7 +18,7 @@ class UserActivitiesService {
   }
 
   static Future<void> createUserActivity(
-      int userId, int activityId, String deliveryDate, int score) async {
+      int userId, int activityId, String deliveryDate, double score) async {
     final response = await http.post(
       Uri.parse('http://localhost:3000/user_activity'),
       headers: <String, String>{
