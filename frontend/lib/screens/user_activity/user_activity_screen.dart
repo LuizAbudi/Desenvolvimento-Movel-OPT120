@@ -156,7 +156,8 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              // _deletarUsuarioAtividade(userActivity);
+                              _deletarUsuarioAtividade(userActivity['user_id'],
+                                  userActivity['activity_id'], userActivity);
                             },
                           ),
                         ],
@@ -367,6 +368,39 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                 });
               },
               child: Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deletarUsuarioAtividade(
+      int userId, int activityId, Map<String, dynamic> userActivity) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Deletar Usuário - Atividade'),
+          content: Text('Tem certeza que deseja deletar essa associação?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                UserActivitiesService.deleteUserActivity(userId, activityId);
+                Navigator.of(context).pop();
+                setState(() {
+                  widget.userActivities.removeWhere((element) =>
+                      element['user_id'] == userId &&
+                      element['activity_id'] == activityId);
+                });
+              },
+              child: Text('Deletar'),
             ),
           ],
         );
