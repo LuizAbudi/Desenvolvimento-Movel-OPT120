@@ -14,7 +14,7 @@ class UserActivitiesController {
   async create(req, res) {
     const newUserActivities = req.body;
 
-    if (typeof newUserActivities.score !== 'number' || newUserActivities.score < 0 || newUserActivities.score > 10) {
+    if (newUserActivities.score < 0 || newUserActivities.score > 10) {
       return res.status(400).json({ error: 'O score deve ser um número entre 0 e 10.' });
     }
 
@@ -31,7 +31,7 @@ class UserActivitiesController {
     const { userId, activityId } = req.params;
     const newUserActivities = req.body;
 
-    if (typeof newUserActivities.score !== 'number' || newUserActivities.score < 0 || newUserActivities.score > 10) {
+    if (newUserActivities.score < 0 || newUserActivities.score > 10) {
       return res.status(400).json({ error: 'O score deve ser um número entre 0 e 10.' });
     }
 
