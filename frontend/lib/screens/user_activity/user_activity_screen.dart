@@ -18,10 +18,10 @@ class UserActivitiesTable extends StatefulWidget {
 }
 
 class _UserActivitiesTableState extends State<UserActivitiesTable> {
-  late int _userId;
-  late int _activityId;
+  late int _userId = 0;
+  late int _activityId = 0;
   late DateTime? _deliveryDate;
-  late int _score;
+  late int _score = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +100,9 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(userActivity['user_id'].toString()),
+                        Text(' - '),
+                        Text(widget.users.firstWhere((user) =>
+                            user['id'] == userActivity['user_id'])['name']),
                       ],
                     )),
                   ),
@@ -109,6 +112,10 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(userActivity['activity_id'].toString()),
+                        Text(' - '),
+                        Text(widget.activities.firstWhere((activity) =>
+                            activity['id'] ==
+                            userActivity['activity_id'])['title']),
                       ],
                     )),
                   ),
@@ -165,6 +172,7 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
 
   void _criarUsuarioAtividade() {
     TextEditingController datePickerController = TextEditingController();
+
     onTapFunction({required BuildContext context}) async {
       DateTime? pickedDate = await showDatePicker(
         context: context,
@@ -180,89 +188,97 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
     }
 
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Criar Associação Usuário-Atividade'),
-          content: Column(
-            children: [
-              DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Usuário'),
-                items: widget.users
-                    .map((user) => DropdownMenuItem(
-                          value: user['id'],
-                          child: Text(user['name']),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _userId = value as int;
-                  });
-                },
-              ),
-              DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Atividade'),
-                items: widget.activities
-                    .map((activity) => DropdownMenuItem(
-                          value: activity['id'],
-                          child: Text(activity['title']),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _activityId = value as int;
-                  });
-                },
-              ),
-              TextField(
-                onTap: () => onTapFunction(context: context),
-                readOnly: true,
-                controller: datePickerController,
-                decoration: InputDecoration(
-                  labelText: 'Data',
-                  hintText: datePickerController.text.isEmpty
-                      ? 'Selecione uma data'
-                      : datePickerController.text,
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Criar Associação Usuário-Atividade'),
+            content: Column(
+              children: [
+                DropdownButtonFormField(
+                  decoration: InputDecoration(labelText: 'Usuário'),
+                  items: widget.users
+                      .map((user) => DropdownMenuItem(
+                            value: user['id'],
+                            child: Text(user['name']),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _userId = value as int;
+                    });
+                  },
                 ),
+                DropdownButtonFormField(
+                  decoration: InputDecoration(labelText: 'Atividade'),
+                  items: widget.activities
+                      .map((activity) => DropdownMenuItem(
+                            value: activity['id'],
+                            child: Text(activity['title']),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _activityId = value as int;
+                    });
+                  },
+                ),
+                TextField(
+                  onTap: () => onTapFunction(context: context),
+                  readOnly: true,
+                  controller: datePickerController,
+                  decoration: InputDecoration(
+                    labelText: 'Data',
+                    hintText: datePickerController.text.isEmpty
+                        ? 'Selecione uma data'
+                        : datePickerController.text,
+                  ),
+                ),
+                TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _score = int.parse(value);
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Nota',
+                    hintText: 'Digite a nota',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancelar'),
               ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Nota'),
-                onChanged: (value) {
+              TextButton(
+                onPressed: () {
+                  if (_score < 0 || _score > 10) {
+                    return;
+                  }
+                  UserActivitiesService.createUserActivity(
+                    _userId,
+                    _activityId,
+                    DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                    _score,
+                  );
+                  Navigator.of(context).pop();
                   setState(() {
-                    _score = int.parse(value);
+                    widget.userActivities.add({
+                      'user_id': _userId,
+                      'activity_id': _activityId,
+                      'delivery_date':
+                          DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                      'score': _score,
+                    });
                   });
                 },
+                child: Text('Salvar'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                String dataString = DateFormat('yyyy-MM-dd')
-                    .format(_deliveryDate ?? DateTime.now());
-                UserActivitiesService.createUserActivity(
-                    _userId, _activityId, dataString, _score);
-                Navigator.of(context).pop();
-                setState(() {
-                  widget.userActivities.add({
-                    'user_id': _userId,
-                    'activity_id': _activityId,
-                    'delivery_date': dataString,
-                    'score': _score,
-                  });
-                });
-              },
-              child: Text('Salvar'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        });
   }
 }
