@@ -24,8 +24,15 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
   late DateTime? _deliveryDate;
   late double _score = 0;
 
+  // printa atividades
+
   @override
   Widget build(BuildContext context) {
+    if (widget.users.isEmpty || widget.activities.isEmpty) {
+      return Center(
+        child: Text('Não há usuários ou atividades cadastradas.'),
+      );
+    }
     return ListView(
       padding: EdgeInsets.all(10),
       shrinkWrap: true,
@@ -190,12 +197,34 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
       datePickerController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
     }
 
-    showDialog(
+    onDigitInvalidPassword({required BuildContext context}) {
+      showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Criar Associação Usuário-Atividade'),
-            content: Column(
+            title: Text('Nota inválida'),
+            content: Text('A nota deve ser um número entre 0 e 10.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Criar Associação Usuário-Atividade'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField(
                   decoration: InputDecoration(labelText: 'Usuário'),
@@ -254,40 +283,42 @@ class _UserActivitiesTableState extends State<UserActivitiesTable> {
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (_score < 0 || _score > 10) {
-                    return;
-                  }
-                  UserActivitiesService.createUserActivity(
-                    _userId,
-                    _activityId,
-                    DateFormat('yyyy-MM-dd').format(_deliveryDate!),
-                    _score,
-                  );
-                  Navigator.of(context).pop();
-                  setState(() {
-                    widget.userActivities.add({
-                      'user_id': _userId,
-                      'activity_id': _activityId,
-                      'delivery_date':
-                          DateFormat('yyyy-MM-dd').format(_deliveryDate!),
-                      'score': _score,
-                    });
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_score < 0 || _score > 10) {
+                  return onDigitInvalidPassword(context: context);
+                }
+                UserActivitiesService.createUserActivity(
+                  _userId,
+                  _activityId,
+                  DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                  _score,
+                );
+                Navigator.of(context).pop();
+                setState(() {
+                  widget.userActivities.add({
+                    'user_id': _userId,
+                    'activity_id': _activityId,
+                    'delivery_date':
+                        DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                    'score': _score,
                   });
-                },
-                child: Text('Salvar'),
-              ),
-            ],
-          );
-        });
+                });
+              },
+              child: Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _editarUsuarioAtividade(

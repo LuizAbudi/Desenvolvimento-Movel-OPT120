@@ -307,8 +307,11 @@ class _ActivitiesTableState extends State<ActivitiesTable> {
 
   void criarAtividade(String titulo, String descricao, DateTime? data) {
     String dataString = DateFormat('yyyy-MM-dd').format(data ?? DateTime.now());
+    // pega o ultimo id da lista de atividades e soma 1
+    int id = widget.activities.last['id'] + 1;
     setState(() {
       widget.activities.add({
+        'id': id,
         'title': titulo,
         'description': descricao,
         'due_date': dataString,
