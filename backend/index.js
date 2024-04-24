@@ -5,6 +5,11 @@ const router = require('./src/routes/index');
 const connection = require('./src/database/connection');
 const tables = require('./src/database/tables');
 
+const cors = require('cors');
+app.use(cors({
+  origin: '*'
+}));
+
 router(app, express);
 tables.init(connection);
 

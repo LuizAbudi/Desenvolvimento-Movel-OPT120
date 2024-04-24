@@ -8,7 +8,6 @@ class UserActivitiesModel {
           console.log("Erro ao executar a query", err, sql);
           reject(err);
         }
-        console.log("Query executada com sucesso", res);
         resolve(res);
       });
     });
@@ -21,12 +20,16 @@ class UserActivitiesModel {
 
   createUserActivities(newUserActivities) {
     const sql = 'INSERT INTO user_activities SET ?';
-    return this.executeQuery(sql, [newUserActivities]);
+    return this.executeQuery(sql, [newUserActivities]).then(result => {
+      return { id: result.insertId, ...newUserActivities };
+    });
   }
 
   updateUserActivities(newUserActivities, userId, activityId) {
     const sql = 'UPDATE user_activities SET delivery_date = ?, score = ? WHERE user_id = ? AND activity_id = ?';
-    return this.executeQuery(sql, [newUserActivities.delivery_date, newUserActivities.score, userId, activityId]);
+    return this.executeQuery(sql, [newUserActivities.delivery_date, newUserActivities.score, userId, activityId]).then(() => {
+      return { user_id: userId, activity_id: activityId, ...newUserActivities };
+    });
   }
 
   deleteUserActivities(userAndActivityID) {

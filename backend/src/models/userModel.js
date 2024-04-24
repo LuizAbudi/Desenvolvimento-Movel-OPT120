@@ -8,7 +8,6 @@ class UserModel {
           console.log("Erro ao executar a query", err, sql);
           reject(err);
         }
-        console.log("Query executada com sucesso", res);
         resolve(res);
       });
     });
@@ -26,17 +25,23 @@ class UserModel {
 
   createUser(newUser) {
     const sql = 'INSERT INTO users SET ?';
-    return this.executeQuery(sql, [newUser]);
+    return this.executeQuery(sql, [newUser]).then((res) => {
+      return { id: res.insertId, ...newUser };
+    });
   }
 
   updateUser(newUser, id) {
     const sql = 'UPDATE users SET ? WHERE id = ?';
-    return this.executeQuery(sql, [newUser, id]);
+    return this.executeQuery(sql, [newUser, id]).then(() => {
+      return { id, ...newUser };
+    });
   }
 
   deleteUser(id) {
     const sql = 'DELETE FROM users WHERE id = ?';
-    return this.executeQuery(sql, [id]);
+    return this.executeQuery(sql, [id]).then(() => {
+      return { id };
+    });
   }
 
 }

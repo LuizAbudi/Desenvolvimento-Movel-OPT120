@@ -8,7 +8,6 @@ class ActivityModel {
           console.log("Erro ao executar a query", err, sql);
           reject(err);
         }
-        console.log("Query executada com sucesso", res);
         resolve(res);
       });
     });
@@ -26,17 +25,27 @@ class ActivityModel {
 
   createActivities(newActivity) {
     const sql = 'INSERT INTO activities SET ?';
-    return this.executeQuery(sql, [newActivity]);
+    return this.executeQuery(sql, [newActivity]).then(result => {
+      return { id: result.insertId, ...newActivity };
+    });
   }
 
   updateActivities(newActivity, id) {
     const sql = 'UPDATE activities SET ? WHERE id = ?';
-    return this.executeQuery(sql, [newActivity, id]);
+    return this.executeQuery(sql, [newActivity, id]).then(() => {
+      return { id, ...newActivity };
+    });
   }
 
   deleteActivity(id) {
     const sql = 'DELETE FROM activities WHERE id = ?';
-    return this.executeQuery(sql, [id]);
+    return this.executeQuery(sql, [id]).then(result => {
+      if (result.affectedRows > 0) {
+        return { message: 'Atividade excluída com sucesso' };
+      } else {
+        return { error: 'Nenhuma atividade encontrada para o ID fornecido' };
+      }
+    });
   }
 }
 
