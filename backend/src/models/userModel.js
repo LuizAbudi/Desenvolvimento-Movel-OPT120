@@ -1,4 +1,6 @@
 const connection = require('../database/connection');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 class UserModel {
   executeQuery(sql, params) {
@@ -23,25 +25,32 @@ class UserModel {
     return this.executeQuery(sql, [id]);
   }
 
-  createUser(newUser) {
+  async createUser(newUser) {
+    const hashedPassword = await bcrypt.hash(newUser.password, saltRounds);
+    newUser.password = hashedPassword;
+
     const sql = 'INSERT INTO users SET ?';
     return this.executeQuery(sql, [newUser]).then((res) => {
       return { id: res.insertId, ...newUser };
     });
   }
 
-  updateUser(newUser, id) {
+  async updateUser(newUser, id) {
     const sql = 'UPDATE users SET ? WHERE id = ?';
-    return this.executeQuery(sql, [newUser, id]).then(() => {
-      return { id, ...newUser };
-    });
+    await this.executeQuery(sql, [newUser, id]);
+    return { id, ...newUser };
   }
 
-  deleteUser(id) {
+  async deleteUser(id) {
     const sql = 'DELETE FROM users WHERE id = ?';
-    return this.executeQuery(sql, [id]).then(() => {
-      return { id };
-    });
+    await this.executeQuery(sql, [id]);
+    return { id };
+  }
+
+  async getUserByEmail(email) {
+    const sql = 'SELECT * FROM users WHERE email = ?';
+    const result = await this.executeQuery(sql, [email]);
+    return result[0];
   }
 
 }
