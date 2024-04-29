@@ -16,7 +16,12 @@ async function login(req, res) {
     return res.status(401).json({ message: "Senha incorreta" });
   }
 
-  const token = jwt.sign({ userId: user.id }, 'password', { expiresIn: '1h' });
+  const payload = {
+    userId: user.id,
+    userAdm: user.is_adm
+  };
+
+  const token = jwt.sign(payload, 'password', { expiresIn: '1h' });
 
   res.json({ token });
 }

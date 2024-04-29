@@ -36,6 +36,9 @@ class UserModel {
   }
 
   async updateUser(newUser, id) {
+    const hashedPassword = await bcrypt.hash(newUser.password, saltRounds);
+    newUser.password = hashedPassword;
+
     const sql = 'UPDATE users SET ? WHERE id = ?';
     await this.executeQuery(sql, [newUser, id]);
     return { id, ...newUser };
